@@ -6,9 +6,14 @@ import { mutate, readState } from "./store.js";
 import { employeeHasConsent } from "./privacy.js";
 import { inc,log } from "./monitoring.js";
 
-export async function runIntake() {
-  const messages = await fetchMessages();
-  return processMessages(messages);
+let intakeInFlight;
+export function runIntake() {
+  if (intakeInFlight) return intakeInFlight;
+  intakeInFlight = (async () => {
+    const messages = await fetchMessages();
+    return processMessages(messages);
+  })().finally(() => { intakeInFlight = null; });
+  return intakeInFlight;
 }
 
 export async function processMessages(messages) {

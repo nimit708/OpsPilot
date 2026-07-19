@@ -95,6 +95,8 @@ Open OpsPilot at `http://127.0.0.1:3080` and Grafana at `http://127.0.0.1:3000`.
 
 The JSON file store is safe for a single-process pilot. Before horizontal scaling, replace `src/store.js` with PostgreSQL and enforce unique constraints on `messageId` and action idempotency keys. Use a queue such as SQS, Service Bus, or BullMQ for external actions. Run the built-in scheduler on only one replica, or invoke the intake/EOD endpoints through your platform scheduler.
 
+For the single-instance demo deployment, `SCHEDULER_ENABLED=true` with `POLL_INTERVAL_MS=120000` polls configured message sources every two minutes. Manual and scheduled scans share a single-flight guard, so they cannot overlap. For production-grade incident latency, configure the signed Slack Events endpoint at `POST /webhooks/slack`; polling should remain a fallback because hosted services can sleep or restart.
+
 ## EOD summaries and privacy
 
 `GET /api/digests` previews summaries; `POST /api/digests/send` sends them through Outlook. Employees should opt in, know which channels are monitored, and be able to correct summaries. Establish retention, legal basis, access controls, regional storage, and exclusions for private/HR/security conversations before production rollout. EOD reporting should summarize declared work—not infer productivity or performance.

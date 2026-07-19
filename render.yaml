@@ -18,4 +18,6 @@ services:
       - key: APP_MODE
         value: production
       - key: SCHEDULER_ENABLED
-        value: false
+        value: true
+      - key: POLL_INTERVAL_MS
+        value: 120000
