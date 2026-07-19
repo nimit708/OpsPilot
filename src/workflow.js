@@ -32,9 +32,9 @@ export async function processMessages(messages) {
   return { scanned: messages.length, new: fresh.length };
 }
 
-export async function approveAction(id,{actor,accessToken}={}) {
+export async function approveAction(id,{actor,accessToken,fetchImpl}={}) {
   const action = await mutate(s => { const item=s.actions.find(a=>a.id===id); if(!item||!["pending","approved","failed"].includes(item.status))throw new Error("Action is not awaiting approval"); item.status="executing"; item.attempts=(item.attempts||0)+1; return structuredClone(item); });
-  try { const result = await executeAction(action,{accessToken});
+  try { const result = await executeAction(action,{accessToken,fetchImpl});
     inc("opspilot_actions_total",{kind:action.kind,status:"completed"});log("info","action_completed",{actionId:action.id,kind:action.kind,team:action.team,actor:actor?.email});
     return mutate(s => {
     const item = s.actions.find(a => a.id === id); item.status = "completed"; item.result = result; item.completedAt = new Date().toISOString(); item.approvedBy=actor; delete item.error;
