@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+data/state.json
+node_modules/
+.DS_Store
+logs/
+work/
+certs/*.pem
+certs/*.key
+certs/*.csr
+certs/*.srl

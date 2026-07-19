@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+!.env.example
+certs
+data
+node_modules
+logs
+work
+.DS_Store

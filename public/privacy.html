@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Privacy choices · OpsPilot</title>
+  <link rel="stylesheet" href="/login.css">
+  <link rel="stylesheet" href="/privacy.css">
+</head>
+<body class="privacy-page">
+  <main class="privacy-shell">
+    <header class="privacy-header">
+      <div class="mark" aria-hidden="true">O</div>
+      <div class="eyebrow">PRIVACY &amp; TRANSPARENCY</div>
+      <h1>Understand how your work data is used</h1>
+      <p>Review each category before continuing. OpsPilot supports operational workflows—it does not score productivity, performance, sentiment, or time at work.</p>
+    </header>
+
+    <div class="notice" role="note">
+      <span class="notice-icon" aria-hidden="true">i</span>
+      <div><strong>Your choice stays visible.</strong><br>Your employer must document an appropriate lawful basis. You can revisit this notice, export your data, or submit a privacy request at any time.</div>
+    </div>
+
+    <form id="form">
+      <div class="section-heading">
+        <div><span class="step">1</span><strong>Review the processing categories</strong></div>
+        <button class="select-all" type="button" id="selectAll">Select all</button>
+      </div>
+
+      <div class="scope-grid">
+        <label class="scope">
+          <input type="checkbox" name="scope" value="workplace_messages">
+          <span class="checkmark" aria-hidden="true">✓</span>
+          <span><b>Workplace messages</b><small>Selected approved channels used to identify operational requests.</small></span>
+        </label>
+        <label class="scope">
+          <input type="checkbox" name="scope" value="meeting_transcripts">
+          <span class="checkmark" aria-hidden="true">✓</span>
+          <span><b>Meeting transcripts</b><small>Only meetings explicitly supplied or configured for documentation.</small></span>
+        </label>
+        <label class="scope">
+          <input type="checkbox" name="scope" value="eod_summaries">
+          <span class="checkmark" aria-hidden="true">✓</span>
+          <span><b>EOD summaries</b><small>Your declared work items—not an assessment or performance score.</small></span>
+        </label>
+        <label class="scope">
+          <input type="checkbox" name="scope" value="incident_documentation">
+          <span class="checkmark" aria-hidden="true">✓</span>
+          <span><b>Incident documentation</b><small>Operational evidence used for incident timelines and Confluence drafts.</small></span>
+        </label>
+      </div>
+
+      <div class="acknowledgement">
+        <span class="step">2</span>
+        <div><strong>Acknowledge and enter OpsPilot</strong><p>By continuing, you confirm that you have reviewed the categories above and received this privacy notice.</p></div>
+      </div>
+
+      <button class="primary-action" id="continueButton" disabled>
+        <span>Accept and continue</span><span aria-hidden="true">→</span>
+      </button>
+      <p class="selection-hint" id="selectionHint">Select all four categories to continue.</p>
+    </form>
+
+    <nav class="privacy-links" aria-label="Privacy options">
+      <a href="/privacy-notice.html">Read the full privacy notice <span>↗</span></a>
+      <a class="signout" href="/auth/logout">Sign out</a>
+    </nav>
+    <p class="error" id="error" role="alert"></p>
+  </main>
+  <footer class="privacy-footer">Encrypted in transit · Human approval required · No productivity scoring</footer>
+  <script type="module" src="/privacy.js"></script>
+</body>
+</html>

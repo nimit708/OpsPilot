@@ -1,0 +1,5 @@
+const started=Date.now(),counters=new Map();
+const key=(name,labels={})=>`${name}|${Object.entries(labels).sort().map(([k,v])=>`${k}=${v}`).join(",")}`;
+export function inc(name,labels={},value=1){const k=key(name,labels);counters.set(k,(counters.get(k)||0)+value)}
+export function metrics(){const lines=["# HELP opspilot_uptime_seconds Process uptime.","# TYPE opspilot_uptime_seconds gauge",`opspilot_uptime_seconds ${(Date.now()-started)/1000}`];for(const [k,v] of [...counters].sort()){const [name,labelText]=k.split("|"),labels=labelText?`{${labelText.split(",").map(x=>{const [a,b]=x.split("=");return `${a}="${String(b).replace(/\\/g,"\\\\").replace(/"/g,'\\"')}"`}).join(",")}}`:"";lines.push(`${name}${labels} ${v}`)}return lines.join("\n")+"\n"}
+export function log(level,event,fields={}){const safe={};for(const [k,v] of Object.entries(fields))safe[k]=/token|secret|password|body|transcript|message/i.test(k)?"[REDACTED]":v;process.stdout.write(JSON.stringify({timestamp:new Date().toISOString(),level,event,...safe})+"\n")}

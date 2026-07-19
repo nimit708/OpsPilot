@@ -1,0 +1,54 @@
+services:
+  opspilot:
+    build: .
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3080
+      SECURE_COOKIES: "false"
+    ports: ["3080:3080"]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=15d"]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports: ["9090:9090"]
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes: ["loki-data:/loki"]
+    ports: ["3100:3100"]
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:latest
+    command: ["run", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./monitoring/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on: [loki]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+    depends_on: [prometheus, loki]
+    restart: unless-stopped
+
+volumes:
+  grafana-data:
+  prometheus-data:
+  loki-data:

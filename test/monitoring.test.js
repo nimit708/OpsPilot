@@ -1,0 +1,3 @@
+import test from "node:test";import assert from "node:assert/strict";import {inc,log,metrics} from "../src/monitoring.js";
+test("Prometheus output contains counters and a valid content body",()=>{inc("opspilot_test_total",{status:"ok"});const text=metrics();assert.match(text,/opspilot_uptime_seconds/);assert.match(text,/opspilot_test_total\{status="ok"\} 1/);assert.ok(text.endsWith("\n"))});
+test("structured logger redacts sensitive fields",()=>{let output="";const original=process.stdout.write;process.stdout.write=value=>{output+=value;return true};try{log("info","test",{token:"secret",actionId:"a1"})}finally{process.stdout.write=original}const row=JSON.parse(output);assert.equal(row.token,"[REDACTED]");assert.equal(row.actionId,"a1")});
