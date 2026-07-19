@@ -1,4 +1,5 @@
-import test from "node:test";import assert from "node:assert/strict";import { classify } from "../src/agent.js";
+import test from "node:test";import assert from "node:assert/strict";import { classify, extractResponseText } from "../src/agent.js";
 test("routes a payment outage to incident workflow",async()=>{const d=await classify({channel:"payments",text:"Checkout outage for all customers"});assert.equal(d.team,"payments");assert.equal(d.category,"incident");assert.ok(d.actions.includes("jira"));assert.ok(d.actions.includes("triage"))});
 test("ignores ordinary conversation",async()=>{const d=await classify({channel:"general",text:"Thanks, have a good weekend"});assert.equal(d.actionable,false);assert.deepEqual(d.actions,[])});
 test("detects an explicit Confluence page request",async()=>{const d=await classify({channel:"meeting",text:"Please create a Confluence page with these meeting notes"});assert.ok(d.actions.includes("confluence"));assert.equal(d.actionable,true)});
+test("extracts text from the raw Responses API REST shape",()=>{const text=extractResponseText({output:[{type:"message",content:[{type:"output_text",text:'{"actionable":true}',annotations:[]}]}]});assert.equal(text,'{"actionable":true}')});
