@@ -108,4 +108,4 @@ npm run test:e2e
 
 Tests validate classifier routing, Jira request shape, Slack reads/writes, Microsoft token/Teams/Outlook flows, retry behavior, intake deduplication, and action execution without contacting live services.
 
-The mocked end-to-end test starts with a Slack payment incident that requests documentation, runs it through classification and human approval, and verifies that the same incident summary produces a Jira issue, Slack triage post, Outlook email, and Confluence page. It never uses credentials from `.env` or contacts external services, so it is safe for local runs and CI.
+The mocked end-to-end suite covers a Slack payment incident across Jira, triage, Outlook, and Confluence; Jira-only identity routing; non-actionable conversation suppression; duplicate Slack delivery protection; failed-email retention and retry; and resolved-incident publication to Confluence. It never uses credentials from `.env` or contacts external services, so it is safe for local runs and CI.
