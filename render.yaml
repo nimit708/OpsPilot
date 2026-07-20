@@ -21,3 +21,7 @@ services:
         value: true
       - key: POLL_INTERVAL_MS
         value: 120000
+      - key: EOD_HOUR
+        value: 17
+      - key: EOD_TIME_ZONE
+        value: Europe/London

@@ -3,7 +3,7 @@ import path from "node:path";
 
 const file = path.resolve("data/state.json");
 const seed = {
-  events: [], actions: [], consents:[], privacyRequests:[],
+  events: [], actions: [], consents:[], privacyRequests:[], scheduler:{},
   stats: { messagesScanned: 0, ticketsRaised: 0, incidentsOpened: 0, emailsSent: 0, pagesPublished: 0 },
 };
 let writeQueue = Promise.resolve();

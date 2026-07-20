@@ -99,7 +99,7 @@ For the single-instance demo deployment, `SCHEDULER_ENABLED=true` with `POLL_INT
 
 ## EOD summaries and privacy
 
-`GET /api/digests` previews summaries; `POST /api/digests/send` sends them through Outlook. Employees should opt in, know which channels are monitored, and be able to correct summaries. Establish retention, legal basis, access controls, regional storage, and exclusions for private/HR/security conversations before production rollout. EOD reporting should summarize declared work—not infer productivity or performance.
+`GET /api/digests` previews summaries; approvers can use **Send EOD summaries** or `POST /api/digests/send` to send them through their delegated Outlook session. With `SCHEDULER_ENABLED=true`, `EOD_HOUR=17`, and `EOD_TIME_ZONE=Europe/London`, the single-instance scheduler attempts delivery once each day at 5:00 PM and records the delivered date to prevent duplicates. Personal Microsoft accounts require an active signed-in approver session; a restart or expired session prevents unattended delivery, so organizational app-only mail or durable encrypted delegated-token storage is required for reliable production scheduling. Employees should opt in, know which channels are monitored, and be able to correct summaries. Establish retention, legal basis, access controls, regional storage, and exclusions for private/HR/security conversations before production rollout. EOD reporting should summarize declared work—not infer productivity or performance.
 
 ## Dashboard demo intake
 

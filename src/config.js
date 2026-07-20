@@ -25,7 +25,7 @@ export const config = {
     teamId: process.env.TEAMS_TEAM_ID || "", channels: csv(process.env.TEAMS_CHANNEL_IDS), sender: process.env.OUTLOOK_SENDER || "",
     triageWebhook: process.env.TEAMS_TRIAGE_WEBHOOK_URL || "",
   },
-  scheduler: { enabled: bool(process.env.SCHEDULER_ENABLED), pollMs: Number(process.env.POLL_INTERVAL_MS || 300000), eodHour: Number(process.env.EOD_HOUR || 17) },
+  scheduler: { enabled: bool(process.env.SCHEDULER_ENABLED), pollMs: Number(process.env.POLL_INTERVAL_MS || 300000), eodHour: Number(process.env.EOD_HOUR || 17), timeZone:process.env.EOD_TIME_ZONE||"Europe/London" },
   privacy:{policyVersion:process.env.PRIVACY_POLICY_VERSION||"2026-07-18",requireConsent:bool(process.env.REQUIRE_EMPLOYEE_CONSENT,process.env.APP_MODE==="production"),retentionDays:Number(process.env.DATA_RETENTION_DAYS||30),lawfulBasis:process.env.MONITORING_LAWFUL_BASIS||"not-configured"},
   monitoring:{metricsToken:process.env.METRICS_TOKEN||"",logLevel:process.env.LOG_LEVEL||"info"},
 };
@@ -42,6 +42,7 @@ export function validateProductionConfig() {
   if (Boolean(config.tls.certPath)!==Boolean(config.tls.keyPath)) errors.push("TLS_CERT_PATH and TLS_KEY_PATH must be configured together");
   if (config.auth.redirectUri.startsWith("https://") && !(config.tls.certPath&&config.tls.keyPath) && !config.tls.externalHttps) errors.push("HTTPS OAuth redirect requires local TLS certificates or EXTERNAL_HTTPS=true behind a trusted HTTPS proxy");
   if (!["slack","teams","both"].includes(config.triageProvider)) errors.push("TRIAGE_PROVIDER must be slack, teams, or both");
+  try { new Intl.DateTimeFormat("en",{timeZone:config.scheduler.timeZone}).format(); } catch { errors.push("EOD_TIME_ZONE must be a valid IANA timezone"); }
   if (config.mode !== "production") return errors;
   if (!config.adminToken) errors.push("ADMIN_API_TOKEN is required");
   if (!config.auth.clientId || !config.auth.clientSecret) errors.push("Microsoft OAuth credentials are incomplete");
