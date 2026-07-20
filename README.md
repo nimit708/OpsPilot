@@ -101,6 +101,10 @@ For the single-instance demo deployment, `SCHEDULER_ENABLED=true` with `POLL_INT
 
 `GET /api/digests` previews summaries; `POST /api/digests/send` sends them through Outlook. Employees should opt in, know which channels are monitored, and be able to correct summaries. Establish retention, legal basis, access controls, regional storage, and exclusions for private/HR/security conversations before production rollout. EOD reporting should summarize declared work—not infer productivity or performance.
 
+## Dashboard demo intake
+
+Authenticated users can select **Try demo incident** to submit a synthetic Slack payment outage through the real classification and approval pipeline without accessing their Slack workspace. The endpoint creates pending proposals only; Jira, Slack, Outlook, and Confluence writes still require an authorized approver. Each signed-in identity is limited to one demo run every two minutes to control API usage.
+
 ## Test
 
 ```bash
