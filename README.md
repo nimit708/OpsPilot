@@ -1,17 +1,98 @@
 # OpsPilot
 
-Production-oriented workflow automation for turning Teams and Slack messages into governed Jira tickets, Slack/Teams triage posts, Outlook emails, and employee EOD summaries.
+OpsPilot is an AI-assisted operations dashboard that converts workplace conversations into governed actions. It monitors approved Slack or Microsoft Teams sources, classifies incidents and tasks, routes them to the correct team, and proposes Jira tickets, triage alerts, Outlook emails, Confluence pages, and employee end-of-day summaries. External actions remain behind human approval by default.
 
-## Run locally
+**Live demo:** [opspilot-pqgk.onrender.com](https://opspilot-pqgk.onrender.com)
 
-Node 20+ is required; the service has no third-party runtime dependencies.
+## What it does
+
+- Reads messages from configured Slack channels or enterprise Microsoft Teams channels.
+- Uses a configurable GPT-5.6 model to identify actionable work, severity, ownership, and required workflows.
+- Creates reviewable proposals for Jira, Slack/Teams triage, Outlook, and Confluence.
+- Generates meeting-note and resolved-incident drafts before publishing them to Confluence.
+- Produces employee EOD summaries, with manual delivery and a timezone-aware 5 PM scheduler.
+- Provides Microsoft OAuth login, approver roles, consent controls, audit activity, retries, and duplicate prevention.
+- Exposes Prometheus metrics and structured, redacted logs for the included Grafana/Loki monitoring stack.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[Slack, Teams, or demo message] --> B[AI classification]
+    B --> C[Team, severity, and action proposals]
+    C --> D[Human approval]
+    D --> E[Jira]
+    D --> F[Slack or Teams triage]
+    D --> G[Outlook]
+    D --> H[Confluence]
+    B --> I[EOD summary and audit activity]
+```
+
+The browser UI is served by a dependency-free Node.js HTTP service. Connectors live under `src/connectors/`, workflow orchestration is in `src/workflow.js`, AI classification and drafting are in `src/agent.js`, and the pilot state store is in `src/store.js`.
+
+## Quick start with sample data
+
+### Requirements
+
+- Node.js 20 or newer
+- No third-party runtime packages are required
+
+### Start in demo mode
 
 ```bash
+git clone https://github.com/nimit708/OpsPilot.git
+cd OpsPilot
 cp .env.example .env
 node --env-file=.env src/server.js
 ```
 
-Use `APP_MODE=demo` for the built-in sample. Set `APP_MODE=production` only after completing every required credential. The server refuses to start production mode with an incomplete critical configuration.
+Keep these values for a credential-free local run:
+
+```dotenv
+APP_MODE=demo
+HOST=127.0.0.1
+PORT=3080
+TLS_CERT_PATH=
+TLS_KEY_PATH=
+EXTERNAL_HTTPS=false
+MS_OAUTH_CLIENT_ID=
+MS_OAUTH_CLIENT_SECRET=
+MS_OAUTH_REDIRECT_URI=http://127.0.0.1:3080/auth/callback
+SECURE_COOKIES=false
+```
+
+Open [http://127.0.0.1:3080](http://127.0.0.1:3080), then select **Try demo incident**. You can also call the demo endpoint directly:
+
+```bash
+curl -X POST http://127.0.0.1:3080/api/demo/intake \
+  -H 'Content-Type: application/json'
+```
+
+The sample represents this Slack-style incident:
+
+```text
+Checkout is failing with 500 errors for all customers. Please investigate urgently,
+notify stakeholders, and create a Confluence incident page.
+```
+
+In demo mode, OpsPilot produces safe simulated proposals for Jira, triage, Outlook, and Confluence. It does not contact external services or require real credentials.
+
+## Configure live integrations
+
+Copy `.env.example` to `.env` and provide only the integrations you intend to test. Never commit `.env`, API tokens, OAuth secrets, certificates, or `data/state.json`.
+
+The main configuration groups are:
+
+- `OPENAI_*` for classification and knowledge drafting.
+- `MS_OAUTH_*` for dashboard login and delegated Outlook email.
+- `SLACK_*` for channel intake, triage posts, and signed webhook events.
+- `JIRA_*` and `ROUTE_*_JIRA` for team-specific ticket routing.
+- `CONFLUENCE_*` for approved page publication.
+- `MS_TENANT_ID`, `MS_CLIENT_ID`, and related Teams values for enterprise Graph access.
+- `ADMIN_EMAILS` and `APPROVER_EMAILS` for role-based authorization.
+- `SCHEDULER_*`, `EOD_HOUR`, and `EOD_TIME_ZONE` for automated intake and EOD delivery.
+
+Set `APP_MODE=production` only after completing the required credentials. The service validates critical production configuration and refuses to start if required values are incomplete.
 
 ### Local HTTPS
 
@@ -67,7 +148,7 @@ The Confluence service account needs access to the configured space and permissi
 
 ## Security and operational behavior
 
-- Production `/api/*` endpoints require `Authorization: Bearer <ADMIN_API_TOKEN>`.
+- Production `/api/*` endpoints require a valid Microsoft session or `Authorization: Bearer <ADMIN_API_TOKEN>`.
 - Confluence drafts can be previewed and edited in the approval queue. Approval publishes through `/wiki/api/v2/pages` and records the page link.
 - Slack webhook payloads require a valid HMAC signature and a timestamp no older than five minutes.
 - External actions default to human approval. A workflow action is atomically claimed before execution, preventing double-click duplicates.
@@ -105,6 +186,40 @@ For the single-instance demo deployment, `SCHEDULER_ENABLED=true` with `POLL_INT
 
 Authenticated users can select **Try demo incident** to submit a synthetic Slack payment outage through the real classification and approval pipeline without accessing their Slack workspace. The endpoint creates pending proposals only; Jira, Slack, Outlook, and Confluence writes still require an authorized approver. Each signed-in identity is limited to one demo run every two minutes to control API usage.
 
+## Project structure
+
+```text
+public/                       Dashboard, login, consent, and policy UI
+src/server.js                 HTTP routes, webhooks, security headers, and static files
+src/agent.js                  GPT-5.6 classification and Confluence drafting
+src/workflow.js               Intake, approvals, retries, EOD summaries, and orchestration
+src/connectors/               Jira, Slack, Microsoft Graph, and Confluence clients
+src/auth.js                   Microsoft OAuth, PKCE, roles, and delegated tokens
+src/privacy.js                Consent, privacy requests, exports, and retention
+src/scheduler.js              Two-minute intake and timezone-aware EOD delivery
+src/monitoring.js             Metrics and redacted structured logging
+monitoring/                   Grafana, Prometheus, Loki, and Alloy configuration
+docs/                         Monitoring policy, DPIA, and retention templates
+test/                         Unit, integration, navigation, scheduler, and E2E tests
+render.yaml                   Render deployment blueprint
+```
+
+## How Codex and GPT-5.6 were used
+
+OpsPilot was designed and implemented collaboratively in the Codex app using GPT-5.6 Sol. I supplied the product idea, workflow requirements, integration accounts, routing choices, privacy expectations, and feedback from live tests. Codex helped translate those decisions into implementation and supported the project throughout the following stages:
+
+1. **Application foundation:** created the dependency-free Node.js backend, dashboard UI, state model, classification flow, approval queue, and connector boundaries.
+2. **Agent behavior:** developed the structured GPT-5.6 prompt and JSON schema used to classify messages by actionability, team, severity, confidence, and proposed actions. GPT-5.6 also drafts factual meeting notes and incident-review pages while marking missing information for confirmation.
+3. **Integrations:** implemented Jira Cloud, Slack, Microsoft Graph/Outlook, Teams, and Confluence request flows, including routing, idempotency metadata, retries, and health checks.
+4. **Authentication and HTTPS:** added Microsoft Entra OAuth with authorization-code flow, PKCE, delegated Outlook permission, secure cookies, local certificates, and hosted callback handling.
+5. **Privacy and safety:** added consent acknowledgement, retention controls, data-rights requests, role-based approvals, redacted logs, and human review before external writes.
+6. **Debugging and deployment:** diagnosed Slack channel membership, consent filtering, raw Responses API parsing, hosted HTTPS, Render environment variables, Docker permissions, and OAuth redirect mismatches.
+7. **Quality assurance:** created mocked integration tests and end-to-end scenarios for successful workflows, non-actionable messages, team routing, duplicate intake, connector failure and retry, EOD scheduling, and Confluence publication.
+
+GPT-5.6 Sol was the development and reasoning model used through Codex. The model used by the running OpsPilot agent is independently configurable with `OPENAI_MODEL`; the repository default is `gpt-5.6-terra`, allowing deployments to balance capability and operating cost without changing the application code.
+
+The resulting code and behavior were reviewed through local tests and live integration checks. Credentials, account creation, Microsoft/Slack/Atlassian configuration, deployment decisions, and final product validation remained human-controlled.
+
 ## Test
 
 ```bash
@@ -115,3 +230,5 @@ npm run test:e2e
 Tests validate classifier routing, Jira request shape, Slack reads/writes, Microsoft token/Teams/Outlook flows, retry behavior, intake deduplication, and action execution without contacting live services.
 
 The mocked end-to-end suite covers a Slack payment incident across Jira, triage, Outlook, and Confluence; Jira-only identity routing; non-actionable conversation suppression; duplicate Slack delivery protection; failed-email retention and retry; and resolved-incident publication to Confluence. It never uses credentials from `.env` or contacts external services, so it is safe for local runs and CI.
+
+At the time of submission, the full suite contains 22 passing tests. Run `npm test` before relying on that count, as it will grow with the project.
